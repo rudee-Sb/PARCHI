@@ -1,0 +1,16 @@
+[
+  {
+    "id": "ff678336",
+    "name": "Rahul Sharma",
+    "specialization": null,
+    "contact": "9876543210",
+    "created_at": "2026-05-05T23:56:11.898575"
+  },
+  {
+    "id": "bfcbcfed",
+    "name": "Dr. Priya Singh",
+    "specialization": "Cardiology",
+    "contact": "9123456789",
+    "created_at": "2026-05-05T23:56:23.831558"
+  }
+]
