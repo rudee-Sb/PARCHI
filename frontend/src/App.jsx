@@ -1,122 +1,139 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
-import './App.css'
+import { Box, Typography } from "@mui/material";
 
-function App() {
-  const [count, setCount] = useState(0)
+import { useState } from "react";
 
-  return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.jsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
+import {
+    Routes,
+    Route,
+} from "react-router-dom";
 
-      <div className="ticks"></div>
+import Sidebar from "./layout/Sidebar";
+import Navbar from "./layout/Navbar";
 
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
+import Appointments from "./pages/Appointments";
 
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
-  )
+/* TEMP PAGES */
+function Patients() {
+    return (
+        <Typography variant="h3">
+            Patients Page
+        </Typography>
+    );
 }
 
-export default App
+function Schedule() {
+    return (
+        <Typography variant="h3">
+            Schedule Page
+        </Typography>
+    );
+}
+
+function Settings() {
+    return (
+        <Typography variant="h3">
+            Settings Page
+        </Typography>
+    );
+}
+
+function App() {
+    const [collapsed, setCollapsed] =
+        useState(true);
+
+    return (
+        <Box
+            sx={{
+                display: "grid",
+
+                gridTemplateColumns:
+                    collapsed
+                        ? "72px 1fr"
+                        : "240px 1fr",
+
+                gridTemplateRows:
+                    "80px 1fr",
+
+                height: "100vh",
+
+                bgcolor:
+                    "background.default",
+
+                overflow: "hidden",
+
+                transition:
+                    "grid-template-columns 0.25s ease",
+            }}
+        >
+            {/* SIDEBAR */}
+            <Box
+                sx={{
+                    position: "relative",
+                    zIndex: 1200,
+                }}
+            >
+                <Sidebar
+                    collapsed={collapsed}
+                    setCollapsed={
+                        setCollapsed
+                    }
+                />
+            </Box>
+
+            {/* NAVBAR */}
+            <Box
+                sx={{
+                    gridColumn: 2,
+                    minWidth: 0,
+                }}
+            >
+                <Navbar />
+            </Box>
+
+            {/* MAIN CONTENT */}
+            <Box
+                sx={{
+                    gridColumn: 2,
+
+                    overflow: "auto",
+
+                    p: 3,
+
+                    minWidth: 0,
+
+                    bgcolor:
+                        "background.default",
+
+                    color:
+                        "text.primary",
+                }}
+            >
+                <Routes>
+                    <Route
+                        path="/"
+                        element={
+                            <Appointments />
+                        }
+                    />
+
+                    <Route
+                        path="/patients"
+                        element={<Patients />}
+                    />
+
+                    <Route
+                        path="/schedule"
+                        element={<Schedule />}
+                    />
+
+                    <Route
+                        path="/settings"
+                        element={<Settings />}
+                    />
+                </Routes>
+            </Box>
+        </Box>
+    );
+}
+
+export default App;
