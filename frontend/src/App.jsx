@@ -1,5 +1,5 @@
 import { Box, Typography } from "@mui/material";
-
+import './index.css'
 import { useState } from "react";
 
 import {
@@ -11,20 +11,13 @@ import Sidebar from "./layout/Sidebar";
 import Navbar from "./layout/Navbar";
 
 import Appointments from "./pages/Appointments";
+import Schedule from "./pages/Schedule";
 
 /* TEMP PAGES */
 function Patients() {
     return (
         <Typography variant="h3">
             Patients Page
-        </Typography>
-    );
-}
-
-function Schedule() {
-    return (
-        <Typography variant="h3">
-            Schedule Page
         </Typography>
     );
 }
