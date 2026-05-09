@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import {
     Avatar,
     Box,
@@ -10,7 +10,7 @@ import {
     useTheme,
 } from "@mui/material";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { tokens } from "../theme/theme";
+import { getAppointments } from "../api/api";
 
 // --- Date Utility Helpers ---
 const getStartOfDay = (date) => {
@@ -48,57 +48,27 @@ const dayAfter = addDays(today, 2);
 
 const timeSlots = ["8 AM", "9 AM", "10 AM", "11 AM", "12 PM", "1 PM"];
 
-const scheduleCards = [
-    {
-        id: 1,
-        title: "General Checkup",
-        doctor: "Dr. Sarah Ahmed",
-        date: formatDate(today),
-        start: 0,
-        duration: 2,
-        avatars: ["https://i.pravatar.cc/150?img=11", "https://i.pravatar.cc/150?img=15"],
-    },
-    {
-        id: 2,
-        title: "Heart Consultation",
-        doctor: "Dr. Raj Malhotra",
-        date: formatDate(today),
-        start: 3,
-        duration: 1,
-        avatars: ["https://i.pravatar.cc/150?img=5"],
-    },
-    {
-        id: 3,
-        title: "Emergency Visit",
-        doctor: "Dr. Emily Carter",
-        date: formatDate(tomorrow),
-        start: 1,
-        duration: 2,
-        avatars: ["https://i.pravatar.cc/150?img=25"],
-    },
-    {
-        id: 4,
-        title: "Dental Surgery",
-        doctor: "Dr. Ayaan Kapoor",
-        date: formatDate(tomorrow),
-        start: 4,
-        duration: 2,
-        avatars: ["https://i.pravatar.cc/150?img=32", "https://i.pravatar.cc/150?img=35"],
-    },
-    {
-        id: 5,
-        title: "Neurology Session",
-        doctor: "Dr. Kritika Sen",
-        date: formatDate(dayAfter),
-        start: 2,
-        duration: 2,
-        avatars: ["https://i.pravatar.cc/150?img=44"],
-    },
-];
 
 export default function Schedule() {
     const theme = useTheme();
     const colors = tokens(theme.palette.mode);
+
+    const [scheduleCards, setScheduleCards] = useState([]);
+
+    useEffect(() => {
+        getAppointments().then(res => {
+            const mapped = res.data.data.map((a, i) => ({
+                id:       a.id,
+                title:    a.title || "Consultation",
+                doctor:   a.doctor?.name || "Unknown Doctor",
+                date:     a.date,
+                start:    i % 6,
+                duration: 1,
+                avatars:  [],
+            }));
+            setScheduleCards(mapped);
+        });
+    }, []);
 
     const [view, setView] = useState("week");
     const [currentDate, setCurrentDate] = useState(today);

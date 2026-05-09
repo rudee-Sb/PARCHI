@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 
 import {
     Avatar,
@@ -30,72 +30,9 @@ import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 
 import dayjs from "dayjs";
 
-import ReceiptLongIcon from "@mui/icons-material/ReceiptLong";
+import { getDoctors, addPatient, bookAppointment } from "../api/api";
 import DownloadRoundedIcon from "@mui/icons-material/DownloadRounded";
 
-const doctors = [
-    {
-        id: 1,
-        name: "Dr. Sarah Ahmed",
-        specialization: "Cardiologist",
-        fees: 1200,
-        image: "https://i.pravatar.cc/150?img=32",
-    },
-    {
-        id: 2,
-        name: "Dr. Raj Malhotra",
-        specialization: "Dermatologist",
-        fees: 900,
-        image: "https://i.pravatar.cc/150?img=12",
-    },
-    {
-        id: 3,
-        name: "Dr. Emily Carter",
-        specialization: "Neurologist",
-        fees: 1500,
-        image: "https://i.pravatar.cc/150?img=48",
-    },
-    {
-        id: 4,
-        name: "Dr. Ram Mishra",
-        specialization: "Physician",
-        fees: 500,
-        image: "https://i.pravatar.cc/150?img=18",
-    },
-];
-
-const availableSlots = {
-    1: [
-        "10:00 AM",
-        "10:30 AM",
-        "11:00 AM",
-        "11:30 AM",
-    ],
-    2: [
-        "12:00 PM",
-        "12:30 PM",
-        "01:00 PM",
-    ],
-    3: [
-        "03:00 PM",
-        "03:30 PM",
-        "04:00 PM",
-    ],
-    4: [
-        "10:00 AM",
-        "12:30 PM",
-        "01:00 PM",
-        "02:00 PM",
-        "07:00 PM",
-    ]
-};
-
-const bookedSlots = {
-    1: ["10:30 AM"],
-    2: ["12:30 PM"],
-    3: ["03:30 PM"],
-    4: ["10:30 AM", "11:00 AM"]
-};
 
 const steps = [
     "Patient Details",
@@ -110,7 +47,16 @@ export default function Appointments() {
 
     const [activeStep, setActiveStep] = useState(0);
 
-    const [selectedDoctor, setSelectedDoctor] = useState(doctors[0]);
+    const [selectedDoctor, setSelectedDoctor] = useState(null);
+    const [doctors, setDoctors] = useState([]);
+
+    useEffect(() => {
+        getDoctors().then(res => {
+            const data = res.data.data;
+            setDoctors(data);
+            if (data.length > 0) setSelectedDoctor(data[0]);
+        });
+    }, []);
 
     const [selectedDate, setSelectedDate] = useState(dayjs());
 
@@ -124,7 +70,7 @@ export default function Appointments() {
     });
 
     const doctorSlots = useMemo(() => {
-        return availableSlots[selectedDoctor.id] || [];
+        return selectedDoctor?.availableSlots || [];
     }, [selectedDoctor]);
 
     const handleNext = () => {
@@ -820,10 +766,7 @@ export default function Appointments() {
                                         }}
                                     >
                                         {doctorSlots.map((slot) => {
-                                            const booked =
-                                                bookedSlots[
-                                                    selectedDoctor.id
-                                                ]?.includes(slot);
+                                            const booked = false;
 
                                             return (
                                                 <Box
@@ -930,7 +873,24 @@ export default function Appointments() {
                                         <Button
                                             fullWidth
                                             variant="contained"
-                                            onClick={handleNext}
+                                            onClick={async () => {
+                                                const patientRes = await addPatient({
+                                                    ...patientData,
+                                                    priority: patientData.priority || "Normal",
+                                                });
+                                                const patientId = patientRes.data.data.id;
+
+                                                await bookAppointment({
+                                                    patientId,
+                                                    doctorId:  selectedDoctor.id,
+                                                    date:      selectedDate.format("YYYY-MM-DD"),
+                                                    slot:      selectedSlot,
+                                                    priority:  patientData.priority || "Normal",
+                                                    title:     "Consultation",
+                                                });
+
+                                                handleNext();
+                                            }}
                                             sx={{
                                                 height: 50,
                                                 borderRadius: "16px",
