@@ -12,5 +12,14 @@
     "specialization": "Cardiology",
     "contact": "9123456789",
     "created_at": "2026-05-05T23:56:23.831558"
+  },
+  {
+    "id": "d04513bd-394e-449a-b826-117be84832ed",
+    "name": "Dr. Sarah Ahmed",
+    "specialization": "Cardiologist",
+    "fees": 1200,
+    "image": "",
+    "availableSlots": [],
+    "createdAt": "2026-05-09T21:51:12.757256"
   }
 ]

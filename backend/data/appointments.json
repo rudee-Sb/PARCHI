@@ -1,13 +1,13 @@
 [
   {
-    "id": "388b8843",
-    "patient_id": "ac004ddb",
-    "doctor_id": "bfcbcfed",
-    "patient_name": "Rahul Sharma",
-    "doctor_name": "Dr. Priya Singh",
+    "id": "bea40fbb-4081-4ea4-9542-54d051bb034a",
+    "patientId": "6fd8e36b-b49c-4a00-93cf-c62c342aabc1",
+    "doctorId": "d04513bd-394e-449a-b826-117be84832ed",
     "date": "2026-05-10",
-    "time": "10:30",
-    "status": "booked",
-    "created_at": "2026-05-06T00:04:13.361228"
+    "slot": "10:00 AM",
+    "status": "cancelled",
+    "priority": "Normal",
+    "title": "Consultation",
+    "createdAt": "2026-05-09T21:53:00.975691"
   }
 ]
