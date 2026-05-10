@@ -19,7 +19,7 @@ const pageTitles = {
     "/": "Appointments",
     "/patients": "Patients",
     "/schedule": "Schedule",
-    "/settings": "Settings",
+    "/manage-appointments": "Cancellations",
 };
 
 export default function Navbar() {
