@@ -8,6 +8,14 @@ import {
 } from "@mui/material";
 
 import { useLocation, useNavigate } from "react-router-dom";
+import {
+    IconButton,
+} from "@mui/material";
+
+import {
+    Moon,
+    Sun,
+} from "lucide-react";
 
 import { useContext } from "react";
 
@@ -20,6 +28,7 @@ import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
 import SettingsIcon from "@mui/icons-material/Settings";
 import DarkModeIcon from "@mui/icons-material/DarkMode";
 import LocalHospitalIcon from "@mui/icons-material/LocalHospital";
+import { CalendarX } from "lucide-react";
 
 export default function Sidebar({
     collapsed,
@@ -53,6 +62,11 @@ export default function Sidebar({
             label: "Schedule",
             path: "/schedule",
         },
+        {
+            icon: <CalendarX size={20} />,
+            label: "Manage Bookings",
+            path: "/manage-appointments",
+        }
     ];
 
     const bottomItems = [
@@ -86,7 +100,6 @@ export default function Sidebar({
                 //     "0 10px 40px rgba(140, 149, 159, 0.08)",
             }}
         >
-            {/* TOP */}
             {/* TOP */}
             <Box
                 sx={{
@@ -193,7 +206,7 @@ export default function Sidebar({
 
                                 "&:hover": {
                                     bgcolor:
-                                        colors.primary[200],
+                                        colors.primary[500],
                                 },
                             }}
                         >
@@ -268,7 +281,7 @@ export default function Sidebar({
                             borderTop: `1.4px solid ${colors.primary[500]}`,
                             "&:hover": {
                                 bgcolor:
-                                    colors.primary[200],
+                                    colors.primary[500],
                             },
                         }}
                     >
@@ -324,27 +337,18 @@ export default function Sidebar({
 
                 {/* Theme Toggle */}
                 <Box
-                    onClick={
-                        colorMode.toggleColorMode
-                    }
+                    onClick={colorMode.toggleColorMode}
                     sx={{
                         display: "flex",
-
                         alignItems: "center",
-
                         px: 2,
-
                         py: 1.1,
-
                         gap: 2,
-
                         cursor: "pointer",
-
                         transition: "0.2s ease",
 
                         "&:hover": {
-                            bgcolor:
-                                colors.primary[200],
+                            bgcolor: colors.primary[200],
                         },
                     }}
                 >
@@ -352,47 +356,50 @@ export default function Sidebar({
                         sx={{
                             width: 40,
                             height: 40,
-
                             borderRadius: "12px",
 
                             display: "flex",
-
                             alignItems: "center",
-
-                            justifyContent:
-                                "center",
+                            justifyContent: "center",
 
                             bgcolor:
-                                theme.palette.mode ===
-                                    "dark"
-                                    ? colors.secondary[500]
-                                    : "transparent",
+                                theme.palette.mode === "dark"
+                                    ? "rgba(255,255,255,0.03)"
+                                    : "rgba(15, 23, 42, 0.14)",
 
                             color:
-                                theme.palette.mode ===
-                                    "dark"
-                                    ? "#fff"
-                                    : colors.white[700],
+                                theme.palette.mode === "dark"
+                                    ? colors.yellowAccent[300]
+                                    : colors.pinkAccent[500],
 
-                            transition:
-                                "0.2s ease",
+                            transition: "0.2s ease",
+
+                            "&:hover": {
+                                bgcolor:
+                                    theme.palette.mode === "dark"
+                                        ? "rgba(255,255,255,0.02)"
+                                        : "rgba(15,23,42,0.08)",
+                            },
                         }}
                     >
-                        <DarkModeIcon />
+                        {theme.palette.mode === "dark" ? (
+                            <Sun size={18} />
+                        ) : (
+                            <Moon size={18} />
+                        )}
                     </Box>
 
                     {!collapsed && (
                         <Typography
                             sx={{
-                                color:
-                                    colors.white[900],
-
+                                color: colors.white[900],
                                 fontWeight: 600,
-
                                 fontSize: 14,
                             }}
                         >
-                            Theme
+                            {theme.palette.mode === "dark"
+                                ? "Light Mode"
+                                : "Dark Mode"}
                         </Typography>
                     )}
                 </Box>

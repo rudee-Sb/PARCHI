@@ -11,24 +11,9 @@ import Sidebar from "./layout/Sidebar";
 import Navbar from "./layout/Navbar";
 
 import Appointments from "./pages/Appointments";
+import ManageAppointments from "./pages/ManageAppointments";
 import Schedule from "./pages/Schedule";
-
-/* TEMP PAGES */
-function Patients() {
-    return (
-        <Typography variant="h3">
-            Patients Page
-        </Typography>
-    );
-}
-
-function Settings() {
-    return (
-        <Typography variant="h3">
-            Settings Page
-        </Typography>
-    );
-}
+import Patients from "./pages/Patients";
 
 function App() {
     const [collapsed, setCollapsed] =
@@ -111,17 +96,23 @@ function App() {
 
                     <Route
                         path="/patients"
-                        element={<Patients />}
+                        element={
+                            <Patients />
+                        }
                     />
 
                     <Route
                         path="/schedule"
-                        element={<Schedule />}
+                        element={
+                            <Schedule />
+                        }
                     />
 
                     <Route
-                        path="/settings"
-                        element={<Settings />}
+                        path="/manage-appointments"
+                        element={
+                            <ManageAppointments />
+                        }
                     />
                 </Routes>
             </Box>

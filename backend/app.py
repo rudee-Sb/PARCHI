@@ -116,19 +116,34 @@ def book_appointment():
 def cancel_appointment():
     body = request.get_json(silent=True) or {}
     appt_id = body.get("appointmentId")
+    
     if not appt_id:
         return error("appointmentId is required")
+        
     appointments = load(APPOINTMENTS_FILE)
-    found = False
-    for a in appointments:
-        if a["id"] == appt_id:
-            a["status"] = "cancelled"
-            found = True
-            break
-    if not found:
+    
+    # 1. Find the appointment before deleting it so we know which patient it belongs to
+    appointment_to_cancel = next((a for a in appointments if a["id"] == appt_id), None)
+    
+    if not appointment_to_cancel:
         return error("Appointment not found", 404)
+        
+    patient_id = appointment_to_cancel["patientId"]
+    
+    # 2. HARD DELETE: Rebuild the list WITHOUT the cancelled appointment
+    appointments = [a for a in appointments if a["id"] != appt_id]
     save(APPOINTMENTS_FILE, appointments)
-    return success("Appointment cancelled", {"appointmentId": appt_id})
+    
+    # 3. PATIENT CLEANUP: Check if this patient has any other appointments left
+    patient_has_other_appts = any(a["patientId"] == patient_id for a in appointments)
+    
+    # If this was their only appointment, permanently delete the patient too
+    if not patient_has_other_appts:
+        patients = load(PATIENTS_FILE)
+        patients = [p for p in patients if p["id"] != patient_id]
+        save(PATIENTS_FILE, patients)
+
+    return success("Appointment completely removed from database", {"appointmentId": appt_id})
 
 
 @app.route("/appointments", methods=["GET"])

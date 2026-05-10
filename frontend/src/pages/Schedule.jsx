@@ -8,9 +8,13 @@ import {
     Stack,
     Typography,
     useTheme,
+    CircularProgress
 } from "@mui/material";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+
+// Make sure getAppointments is exported in your api/api.js file!
 import { getAppointments } from "../api/api";
+import { tokens } from "../theme/theme";
 
 // --- Date Utility Helpers ---
 const getStartOfDay = (date) => {
@@ -32,7 +36,7 @@ const formatDate = (date) => {
 const getStartOfWeek = (date) => {
     const d = getStartOfDay(date);
     const day = d.getDay();
-    const diff = d.getDate() - day + (day === 0 ? -6 : 1); 
+    const diff = d.getDate() - day + (day === 0 ? -6 : 1);
     return new Date(d.setDate(diff));
 };
 
@@ -42,11 +46,39 @@ const addDays = (date, days) => {
     return d;
 };
 
-const today = getStartOfDay(new Date());
-const tomorrow = addDays(today, 1);
-const dayAfter = addDays(today, 2);
+// --- Time Utilities ---
+const timeSlots = ["8 AM", "9 AM", "10 AM", "11 AM", "12 PM", "1 PM", "2 PM", "3 PM", "4 PM", "5 PM"];
 
-const timeSlots = ["8 AM", "9 AM", "10 AM", "11 AM", "12 PM", "1 PM"];
+// Helper to convert backend string "10:30 AM" to the numerical index your grid expects (where 8 AM = 0)
+const convertSlotToGridIndex = (slotString) => {
+    if (!slotString) return 0;
+
+    // Quick parse: "10:30 AM" -> hour: 10, modifier: "AM"
+    const parts = slotString.split(" ");
+    if (parts.length !== 2) return 0;
+
+    const timeParts = parts[0].split(":");
+    let hour = parseInt(timeParts[0], 10);
+    const modifier = parts[1].toUpperCase();
+
+    // Convert to 24 hour clock format
+    if (hour === 12 && modifier === "AM") hour = 0;
+    if (hour !== 12 && modifier === "PM") hour += 12;
+
+    // Grid starts at 8 AM (index 0)
+    let gridIndex = hour - 8;
+
+    // Add 0.5 if it's a 30-minute increment so it floats halfway down the cell
+    if (timeParts[1] === "30") {
+        gridIndex += 0.5;
+    }
+
+    // Clamp to boundaries to prevent cards flying off screen
+    if (gridIndex < 0) return 0;
+    if (gridIndex > timeSlots.length - 1) return timeSlots.length - 1;
+
+    return gridIndex;
+};
 
 
 export default function Schedule() {
@@ -54,26 +86,46 @@ export default function Schedule() {
     const colors = tokens(theme.palette.mode);
 
     const [scheduleCards, setScheduleCards] = useState([]);
-
-    useEffect(() => {
-        getAppointments().then(res => {
-            const mapped = res.data.data.map((a, i) => ({
-                id:       a.id,
-                title:    a.title || "Consultation",
-                doctor:   a.doctor?.name || "Unknown Doctor",
-                date:     a.date,
-                start:    i % 6,
-                duration: 1,
-                avatars:  [],
-            }));
-            setScheduleCards(mapped);
-        });
-    }, []);
+    const [isLoading, setIsLoading] = useState(true);
 
     const [view, setView] = useState("week");
+    const today = useMemo(() => getStartOfDay(new Date()), []);
     const [currentDate, setCurrentDate] = useState(today);
 
-    const gridHeight = 95; // Increased slightly to prevent vertical clipping
+    const gridHeight = 95; // Card height logic relies on this
+
+    useEffect(() => {
+        const fetchSchedule = async () => {
+            setIsLoading(true);
+            try {
+                const res = await getAppointments();
+                const appointments = res.data?.data || [];
+
+                // Map the raw JSON backend data to the UI format required by your grid
+                const mapped = appointments
+                    .filter(a => a.status !== "cancelled") // Don't show cancelled ones
+                    .map((a) => ({
+                        id: a.id,
+                        title: a.title || "Consultation",
+                        doctor: a.doctor?.name || "Dr. Unassigned",
+                        date: a.date,
+                        start: convertSlotToGridIndex(a.slot),
+                        duration: 1, // You can make this dynamic if backend provides end times
+                        avatars: a.patient?.gender === "Female"
+                            ? ["https://i.pravatar.cc/150?img=5"]
+                            : ["https://i.pravatar.cc/150?img=11"],
+                    }));
+
+                setScheduleCards(mapped);
+            } catch (error) {
+                console.error("Failed to fetch schedule data:", error);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        fetchSchedule();
+    }, []);
 
     const visibleDays = useMemo(() => {
         if (view === "day") {
@@ -106,8 +158,8 @@ export default function Schedule() {
                 const columnIndex = visibleDays.findIndex(d => d.dateString === card.date);
                 return { ...card, column: columnIndex };
             })
-            .filter((card) => card.column !== -1);
-    }, [visibleDays]);
+            .filter((card) => card.column !== -1); // Filter out cards not visible in current week/day
+    }, [scheduleCards, visibleDays]);
 
     const handlePrev = () => setCurrentDate((prev) => addDays(prev, view === "week" ? -7 : -1));
     const handleNext = () => setCurrentDate((prev) => addDays(prev, view === "week" ? 7 : 1));
@@ -116,9 +168,17 @@ export default function Schedule() {
     const isPrevDisabled = useMemo(() => {
         if (view === "week") return getStartOfWeek(currentDate).getTime() <= getStartOfWeek(today).getTime();
         return getStartOfDay(currentDate).getTime() <= today.getTime();
-    }, [currentDate, view]);
+    }, [currentDate, view, today]);
 
     const headerTitle = currentDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+
+    if (isLoading) {
+        return (
+            <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%', width: '100%' }}>
+                <CircularProgress color="secondary" />
+            </Box>
+        );
+    }
 
     return (
         <Box sx={{
@@ -142,7 +202,7 @@ export default function Schedule() {
                         "&:hover": { bgcolor: colors.yellowAccent[400] },
                     }}>Today</Button>
                     <Stack direction="row" spacing={0.5}>
-                        <IconButton onClick={handlePrev} disabled={isPrevDisabled} sx={{ bgcolor: colors.primary[400] }}>
+                        <IconButton onClick={handlePrev} disabled={isPrevDisabled} sx={{ bgcolor: isPrevDisabled ? colors.primary[200] : colors.primary[400] }}>
                             <ChevronLeft size={18} color={colors.white[800]} />
                         </IconButton>
                         <IconButton onClick={handleNext} sx={{ bgcolor: colors.primary[400] }}>
@@ -163,25 +223,24 @@ export default function Schedule() {
             </Box>
 
             {/* CALENDAR BODY */}
-            <Box sx={{ 
-                flex: 1, 
-                display: "flex", 
-                overflowY: "auto", // 1. Changed to auto to allow scrolling
-                overflowX: "hidden" 
+            <Box sx={{
+                flex: 1,
+                display: "flex",
+                overflowY: "auto",
+                overflowX: "hidden"
             }}>
-                
+
                 {/* TIME COLUMN */}
-                <Box sx={{ 
-                    width: 80, 
-                    flexShrink: 0, // Prevent column from squishing
-                    borderRight: `1px solid ${colors.primary[400]}`, 
-                    bgcolor: theme.palette.mode === "dark" ? colors.primary[200] : "#fcfcfd" 
+                <Box sx={{
+                    width: 80,
+                    flexShrink: 0,
+                    borderRight: `1px solid ${colors.primary[400]}`,
+                    bgcolor: theme.palette.mode === "dark" ? colors.primary[200] : "#fcfcfd"
                 }}>
-                    {/* EMPTY HEADER CORNER (Made Sticky) */}
-                    <Box sx={{ 
-                        height: 72, 
+                    <Box sx={{
+                        height: 72,
                         borderBottom: `1px solid ${colors.primary[400]}`,
-                        position: "sticky", // 2. Keep at top while scrolling
+                        position: "sticky",
                         top: 0,
                         zIndex: 10,
                         bgcolor: theme.palette.mode === "dark" ? colors.primary[200] : "#fcfcfd"
@@ -197,14 +256,14 @@ export default function Schedule() {
                 </Box>
 
                 <Box sx={{ flex: 1, position: "relative", display: "flex", flexDirection: "column" }}>
-                    {/* DAY HEADERS (Made Sticky) */}
+                    {/* DAY HEADERS */}
                     <Box sx={{
-                        height: 72, 
-                        display: "grid", 
+                        height: 72,
+                        display: "grid",
                         gridTemplateColumns: `repeat(${visibleDays.length}, 1fr)`,
                         borderBottom: `1px solid ${colors.primary[400]}`,
                         background: theme.palette.mode === "dark" ? colors.primary[200] : "#f8fafc",
-                        position: "sticky", // 3. Keep days at top while scrolling
+                        position: "sticky",
                         top: 0,
                         zIndex: 10
                     }}>
@@ -221,11 +280,10 @@ export default function Schedule() {
                     </Box>
 
                     {/* GRID BODY */}
-                    <Box sx={{ 
-                        position: "relative", 
-                        display: "grid", 
-                        gridTemplateColumns: `repeat(${visibleDays.length}, 1fr)` 
-                        // Removed `flex: 1` here so it properly expands to full 6 * 95px height
+                    <Box sx={{
+                        position: "relative",
+                        display: "grid",
+                        gridTemplateColumns: `repeat(${visibleDays.length}, 1fr)`
                     }}>
                         {visibleDays.map((_, colIndex) => (
                             <Box key={colIndex} sx={{ borderRight: `1px solid ${colors.primary[400]}` }}>
@@ -273,7 +331,8 @@ export default function Schedule() {
                                     <Typography sx={{
                                         fontSize: "0.7rem", color: colors.yellowAccent[400], fontWeight: 700,
                                     }}>
-                                        {`${8 + card.start}:00 - ${8 + card.start + card.duration}:00`}
+                                        {/* Simple formatting for display based on numerical start time */}
+                                        {`${Math.floor(8 + card.start)}:${(card.start % 1) !== 0 ? '30' : '00'} - ${Math.floor(8 + card.start + card.duration)}:${((card.start + card.duration) % 1) !== 0 ? '30' : '00'}`}
                                     </Typography>
 
                                     <Stack direction="row" spacing={-1}>
